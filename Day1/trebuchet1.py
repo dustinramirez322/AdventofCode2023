@@ -1,6 +1,8 @@
+# Yank input into a list
 with open('input.txt') as i:
     val = i.read().splitlines()
 
+# Reverse input to find the last integer
 def revVals(input):
     revDigits = []
     for v in val:
@@ -15,6 +17,7 @@ def revVals(input):
     return revDigits
 
 
+# Find the first integer
 def getDig(input):
     digits = []
     for v in val:
@@ -27,13 +30,14 @@ def getDig(input):
         digits.append(x)
     return digits
 
+# Use the above functions to get lists of all first and last integers
 firstNum = getDig(val)
 lastNum = revVals(val)
 
-
+# Combine the two lists using zip
 combined = zip(firstNum,lastNum)
-#print(list(combined))
 
+# Join the first and last integers for all line items in input
 def joinNums(combined):
     combinedList = []
     for c in list(combined):
@@ -42,7 +46,6 @@ def joinNums(combined):
         combinedList.append(y)
     return combinedList
 
+# Create the combined list and print the total sum
 combinedList = joinNums(combined)
-
-print(combinedList)
 print(sum(combinedList))
