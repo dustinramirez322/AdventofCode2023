@@ -38,11 +38,6 @@ def findPuncs(target):
 
 puncList = findPuncs(target)
 
-#print(above)
-#print(target)
-#print(below)
-#print(puncList)
-
 
 ### Step 1 complete
 
@@ -60,11 +55,34 @@ def findNums(above, target, below):
         # if numbers are found then do the following
         if nums != []:
             # build numInfo for each specific number found
+            dupNums = set([x for x in nums if nums.count(x) > 1])
+            dupNumCount = 0
             for n in nums:
-                numInfo['nums'] = nums
-                # find the location of the number on the line
-                # this is necessary if a number and pattern repeats itself
-                realLoc = valLocation(n, t, puncList)
+                if n in dupNums:
+                    if dupNumCount == 0:
+                        numInfo['nums'] = nums
+                        # find the location of the number on the line
+                        # this is necessary if a number and pattern repeats itself
+                        next = nums.index(n) + 1
+                        before = nums.index(n) - 1
+                        dupNumCount += 1
+                    else:
+                        prevIndex = nums.index(n)
+                        numInfo['nums'] = nums
+                        next = nums.index(n, prevIndex + 1) + 1
+                        before = nums.index(n, prevIndex + 1) -1
+                        dupNumCount += 1
+                else:
+                    numInfo['nums'] = nums
+                    # find the location of the number on the line
+                    # this is necessary if a number and pattern repeats itself
+                    next = nums.index(n) + 1
+                    before = nums.index(n) - 1
+                if next == -1:
+                    next = 99999
+                if before == -1:
+                    before = 99999
+                realLoc = valLocation(nums, n, t, before, next, puncList, dupNumCount)
                 # if realLoc comes back as None than the number is the string[0]
                 if realLoc == None:
                     loc = t.index(n)
@@ -73,7 +91,14 @@ def findNums(above, target, below):
                     loc = int(realLoc)
                 length = len(n)
                 # complete the numInfo dictionary
-                numInfo[n] = {'lineNum': x, 'location': loc, 'length': length}
+                if n in numInfo:
+                    prevNumIndex = nums.index(n)
+                    currentNumIndex = nums.index(n, prevNumIndex)
+                    newNum = n + 'a'
+                    nums[currentNumIndex] = newNum
+                    numInfo[n + 'a'] = {'lineNum': x, 'location': loc, 'length': length}
+                else:
+                    numInfo[n] = {'lineNum': x, 'location': loc, 'length': length}
             # insert the numInfo into our plot function, valid numbers are returned
             validNums = plotNums(numInfo)
             print(validNums)
@@ -115,13 +140,15 @@ def plotNums(numInfo):
                 tString = target[lineNum][location-1:location + length+1]
                 bString = below[lineNum][location-1:location + length+1]
         #        print(above[lineNum])
-                #print(aString)
-                #print(tString)
-                #print(bString)
+#                print(aString)
+#                print(tString)
+#                print(bString)
         #print(puncList)
         # iterate through the above, target, and below strings
         # if punctation is found add the number to the valid parts list
         for p in puncList:
+            if n.endswith('a'):
+                n = n.strip('a')
             if p in aString:
                 validParts.append(int(n))
                 break
@@ -133,12 +160,29 @@ def plotNums(numInfo):
                 break
     return validParts
 
-def valLocation(n, t, puncList):
+def valLocation(nums, n, t, before, next, puncList, dup=0):
+    if before == 99999:
+        loc = puncFind(n, t, puncList)
+        return loc
+    if next == 99999:
+        loc = puncFind(n, t, puncList)
+        return loc
+    try:
+        match = re.findall(nums[before] + "(.*)" + nums[next], t)[0]
+    except IndexError:
+        loc = puncFind(n, t, puncList)
+        return loc
+    cleanMatch = match[match.find(n):]
+    loc = t.index(cleanMatch)
+    return loc
+    # use the below to ensure you are looking at the correct number in case of duplicates
+    # see if you can find the punctuation + string
+
+
+def puncFind(n, t, puncList):
     # copy the punctuation list and add '.'
     checkPuncList = puncList.copy()
     checkPuncList.append('.')
-    # use the below to ensure you are looking at the correct number in case of duplicates
-    # see if you can find the punctuation + string
     for c in checkPuncList:
         tLoc = t.find(c + str(n))
         if tLoc == -1:
